@@ -48,9 +48,7 @@ CREATE TABLE MovieGenres (
 
 async function makeTables() {
   console.log(__dirname);
-  const { pathname } = Bun.pathToFileURL(
-    `${__dirname}/../../${Bun.env.DATABASE_URL}`
-  );
+  const { pathname } = Bun.pathToFileURL(`${__dirname}/../../${Bun.env.DATABASE_URL}`);
   console.log(pathname);
   const db = new Database(pathname);
 

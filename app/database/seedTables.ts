@@ -2,9 +2,7 @@
 import { Database } from 'bun:sqlite';
 
 async function makeTables() {
-  const { pathname } = Bun.pathToFileURL(
-    `${__dirname}/../../${Bun.env.DATABASE_URL}`
-  );
+  const { pathname } = Bun.pathToFileURL(`${__dirname}/../../${Bun.env.DATABASE_URL}`);
   const db = new Database(pathname);
 
   try {
