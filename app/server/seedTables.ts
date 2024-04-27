@@ -1,9 +1,9 @@
 // eslint-disable-next-line import/no-unresolved
 import { Database } from 'bun:sqlite';
-import { VITE_DATABASE_URL } from './url';
+import { DATABASE_URL } from './url';
 
 async function makeTables() {
-  const { pathname } = Bun.pathToFileURL(VITE_DATABASE_URL);
+  const { pathname } = Bun.pathToFileURL(DATABASE_URL);
   const db = new Database(pathname);
 
   try {
