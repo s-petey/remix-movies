@@ -10,28 +10,9 @@ export const loader = async () => {
   // 2. Add filtering (genre, actor, "q" - search)
   //   - If we are searching we need to remove the `thumbnail not` below
 
-  const allIds = await db.movies.findMany({
-    select: {
-      id: true,
-    },
-    where: {
-      thumbnail: {
-        not: '',
-      },
-    },
-  });
-
   const movieCount = 10;
 
-  allIds.sort(() => Math.random() - 0.5);
-  const randomIds = allIds.slice(0, movieCount).map((movie) => movie.id);
-
   const movies = await db.movies.findMany({
-    where: {
-      id: {
-        in: randomIds,
-      },
-    },
     include: {
       MovieCast: {
         include: {
@@ -45,6 +26,9 @@ export const loader = async () => {
       },
     },
     take: movieCount,
+    orderBy: {
+      year: 'desc',
+    },
   });
   return json({ movies });
 };
