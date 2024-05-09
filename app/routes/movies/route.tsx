@@ -1,8 +1,7 @@
-import { json } from '@remix-run/node';
-import { useLoaderData } from '@remix-run/react';
+import { json, useLoaderData } from '@remix-run/react';
 import { db } from '~/db.server';
-import { placeholderImageUrl } from '../_placeholderImage';
 import { Chip } from '../Chip';
+import { placeholderImageUrl } from '../_placeholderImage';
 
 export const loader = async () => {
   // TODO:
