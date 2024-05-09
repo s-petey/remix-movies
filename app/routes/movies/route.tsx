@@ -1,5 +1,4 @@
-import { json } from '@remix-run/node';
-import { MetaFunction, useLoaderData } from '@remix-run/react';
+import { json, MetaFunction, useLoaderData } from '@remix-run/react';
 import { db } from '~/db.server';
 import { placeholderImageUrl } from '../_placeholderImage';
 import { Chip } from '../Chip';
