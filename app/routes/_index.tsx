@@ -1,5 +1,5 @@
 import { type MetaFunction } from '@remix-run/node';
-import { ClientLoaderFunctionArgs, Form, json, useLoaderData } from '@remix-run/react';
+import { ClientLoaderFunctionArgs, Form, Link, json, useLoaderData } from '@remix-run/react';
 import { MovieCard } from './MovieCard';
 import { IndexLoader, MoviesData, loader } from './loader.server';
 
@@ -36,10 +36,11 @@ export default function Index() {
     <div>
       <h1 className="text-3xl font-bold underline text-center">Movies app!</h1>
 
-      <Form method="post" className="flex justify-center my-4">
+      <Form method="post" className="flex justify-center my-4 gap-2">
         <button className="p-2 bg-teal-200 text-slate-600 rounded" type="submit">
           Randomize!
         </button>
+        <Link className='p-2 bg-teal-200 text-slate-600 rounded' to="/movies/search">Search</Link>
       </Form>
 
       <div className="flex flex-wrap gap-2 p-4 justify-evenly">
