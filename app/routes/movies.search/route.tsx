@@ -1,5 +1,5 @@
 import { LoaderFunctionArgs } from '@remix-run/node';
-import { json, useFetcher, useLocation } from '@remix-run/react';
+import { json, useFetcher } from '@remix-run/react';
 import { db } from '~/db.server';
 import { Chip } from '~/routes/Chip';
 import { placeholderImageUrl } from '~/routes/_placeholderImage';
@@ -41,7 +41,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const q = (new URL(request.url).searchParams.get('q') ?? '').replace(/"/g, '""');
   const emptyMovies: SearchMoviesData[] = [];
 
-  console.log('q', q);
   if (q.length === 0) return json({ movies: emptyMovies });
 
   const movies = await getMoviesSearched(q);
@@ -54,10 +53,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export default function Movies() {
-  // const { movies } = useLoaderData<SearchLoader>();
   const searchFetcher = useFetcher<SearchLoader>();
-  const { search } = useLocation();
-  console.log('search', search);
 
   return (
     <>
@@ -67,13 +63,6 @@ export default function Movies() {
           placeholder="search"
           type="search"
           name="q"
-          onKeyDown={(event) => {
-            if (event.key === 'Escape' && event.currentTarget.value === '') {
-              // setShow(false);
-            } else {
-              event.stopPropagation();
-            }
-          }}
           onChange={(event) => {
             searchFetcher.submit(event.currentTarget.form);
           }}
@@ -81,7 +70,7 @@ export default function Movies() {
       </searchFetcher.Form>
 
       <div className="flex flex-col gap-1">
-        {!Array.isArray(searchFetcher.data) ? (
+        {!Array.isArray(searchFetcher.data?.movies) ? (
           <div>No search results</div>
         ) : (
           searchFetcher.data?.movies.map((movie) => (
