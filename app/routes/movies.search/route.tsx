@@ -1,11 +1,68 @@
+import { CastMembers, Genres, Movies } from '@prisma/client';
 import { LoaderFunctionArgs } from '@remix-run/node';
-import { json, useFetcher } from '@remix-run/react';
+import { json, useLoaderData, useSearchParams } from '@remix-run/react';
+import { useDeferredValue, useEffect, useState } from 'react';
 import { db } from '~/db.server';
 import { Chip } from '~/routes/Chip';
 import { placeholderImageUrl } from '~/routes/_placeholderImage';
 
-async function getMoviesSearched(q: string) {
-  const movieCount = 10;
+type MovieItem = Movies & {
+  cast: CastMembers[];
+  genres: Genres[];
+};
+
+type LoaderHelpersData = {
+  movies: MovieItem[];
+  pages: number;
+};
+
+const movieCount = 10;
+
+async function getNewestMovies(page: number): Promise<LoaderHelpersData> {
+  const skipPage = page === 0 ? 0 : page - 1;
+
+  const movies = await db.movies.findMany({
+    select: {
+      id: true,
+      href: true,
+      extract: true,
+      MovieCast: {
+        select: {
+          CastMembers: true,
+        },
+      },
+      MovieGenres: {
+        select: { Genres: true },
+      },
+      thumbnail: true,
+      thumbnailHeight: true,
+      thumbnailWidth: true,
+      title: true,
+      year: true,
+    },
+    take: movieCount,
+    orderBy: {
+      year: 'desc',
+    },
+    skip: skipPage * movieCount,
+  });
+
+  const allCount = await db.movies.count();
+
+  return {
+    movies: movies.map((movie) => {
+      return {
+        ...movie,
+        cast: movie.MovieCast.map((mc) => mc.CastMembers),
+        genres: movie.MovieGenres.map((mg) => mg.Genres),
+      };
+    }),
+    pages: Math.ceil(allCount / movieCount),
+  };
+}
+
+async function getMoviesSearched(q: string, page: number): Promise<LoaderHelpersData> {
+  const skipPage = page === 0 ? 0 : page - 1;
 
   const movies = await db.movies.findMany({
     where: {
@@ -13,114 +70,234 @@ async function getMoviesSearched(q: string) {
         contains: q,
       },
     },
-    include: {
-      MovieCast: {
-        include: {
-          CastMembers: true,
-        },
-      },
-      MovieGenres: {
-        include: {
-          Genres: true,
-        },
-      },
-    },
     take: movieCount,
     orderBy: {
       year: 'desc',
     },
+    skip: skipPage * movieCount,
+    select: {
+      id: true,
+      href: true,
+      extract: true,
+      MovieCast: {
+        select: {
+          CastMembers: true,
+        },
+      },
+      MovieGenres: {
+        select: { Genres: true },
+      },
+      thumbnail: true,
+      thumbnailHeight: true,
+      thumbnailWidth: true,
+      title: true,
+      year: true,
+    },
   });
 
-  return movies;
+  const allCount = await db.movies.count({
+    where: {
+      title: {
+        contains: q,
+      },
+    },
+  });
+
+  return {
+    movies: movies.map((movie) => {
+      return {
+        ...movie,
+        cast: movie.MovieCast.map((mc) => mc.CastMembers),
+        genres: movie.MovieGenres.map((mg) => mg.Genres),
+      };
+    }),
+    pages: Math.ceil(allCount / movieCount),
+  };
 }
 
-type SearchMoviesData = Awaited<ReturnType<typeof getMoviesSearched>>;
-type SearchLoader = { movies: SearchMoviesData };
-
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const q = (new URL(request.url).searchParams.get('q') ?? '').replace(/"/g, '""');
-  const emptyMovies: SearchMoviesData[] = [];
+  const searchParams = new URL(request.url).searchParams;
+  const q = searchParams.get('q');
+  const maybePage = parseInt(searchParams.get('page') ?? 'NAN');
+  const page = !isNaN(maybePage) ? maybePage : 0;
 
-  if (q.length === 0) return json({ movies: emptyMovies });
+  if (q === null) {
+    const { movies, pages } = await getNewestMovies(page);
 
-  const movies = await getMoviesSearched(q);
+    return json({ movies, pages });
+  }
+
+  if (q.length === 0) {
+    const data: LoaderHelpersData = { movies: [], pages: 0 };
+    return json(data);
+  }
+
+  const { movies, pages } = await getMoviesSearched(q, page);
   // TODO:
-  // 1. Add pagination
-  // 2. Add filtering (genre, actor, "q" - search)
+  // 1. Add pagination ✅
+  // 2. Add filtering (genre, actor, "q" - search) ✅
+  // 3. add loading ?
+  // 4. add better image loading
+  // 5. add better default no records message -- Not applicable
   //   - If we are searching we need to remove the `thumbnail not` below
 
-  return json({ movies });
+  return json({ movies, pages });
 };
 
-export default function Movies() {
-  const searchFetcher = useFetcher<SearchLoader>();
+export default function SearchMovies() {
+  const { movies, pages } = useLoaderData<typeof loader>();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [value, setValue] = useState(() => {
+    return searchParams.get('q') ?? '';
+  });
+  const deferredValue = useDeferredValue(value);
+
+  useEffect(() => {
+    if (deferredValue !== '') {
+      const currentParams = Array.from(searchParams.entries()).reduce((prev, [k, v]) => {
+        return { ...prev, [k]: v };
+      }, {});
+      setSearchParams({ ...currentParams, q: deferredValue });
+    }
+  }, [deferredValue, searchParams, setSearchParams]);
+
+  const { currentParams, currentPage } = getMovieParams(searchParams);
 
   return (
-    <>
-      <searchFetcher.Form method="get">
+    <div className="flex flex-col m-4">
+      <div className="flex flex-grow gap-1">
         <input
           className="rounded"
           placeholder="search"
           type="search"
           name="q"
-          onChange={(event) => {
-            searchFetcher.submit(event.currentTarget.form);
-          }}
+          value={value}
+          onChange={(event) => setValue(event.currentTarget.value)}
         />
-      </searchFetcher.Form>
+
+        <button
+          disabled={pages > currentPage}
+          onClick={() => {
+            return setSearchParams({
+              ...currentParams,
+              page: '1',
+            });
+          }}
+          className={
+            'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' +
+            (pages > currentPage
+              ? ' disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:shadow-none disabled:cursor-not-allowed'
+              : '')
+          }
+        >
+          {'<<-'}
+        </button>
+
+        <button
+          disabled={pages > currentPage}
+          onClick={() => {
+            setSearchParams({ ...currentParams, page: (currentPage > 0 ? currentPage - 1 : 0).toString() });
+          }}
+          className={
+            'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' +
+            (pages > currentPage
+              ? ' disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:shadow-none disabled:cursor-not-allowed'
+              : '')
+          }
+        >
+          {'<-'}
+        </button>
+
+        <button
+          disabled={movies.length < 10}
+          onClick={() => {
+            setSearchParams({ ...currentParams, page: (currentPage + 1).toString() });
+          }}
+          className={
+            'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' +
+            (movies.length < 10
+              ? ' disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:shadow-none disabled:cursor-not-allowed'
+              : '')
+          }
+        >
+          {'->'}
+        </button>
+
+        <button
+          disabled={movies.length < 10}
+          onClick={() => {
+            setSearchParams({ ...currentParams, page: pages.toString() });
+          }}
+          className={
+            'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' +
+            (movies.length < 10
+              ? ' disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:shadow-none disabled:cursor-not-allowed'
+              : '')
+          }
+        >
+          {'->>'}
+        </button>
+
+        {/* TODO: Last page? */}
+      </div>
 
       <div className="flex flex-col gap-1">
-        {!Array.isArray(searchFetcher.data?.movies) ? (
-          <div>No search results</div>
-        ) : (
-          searchFetcher.data?.movies.map((movie) => (
-            <div key={movie.id} className="flex flex-col p-2">
-              <div className="grid grid-cols-[150px_1fr] md:grid-cols-[200px_1fr] lg:grid-cols-[300px_1fr] items-center gap-2">
-                <div className="bg-slate-50 m-auto rounded-lg overflow-hidden">
-                  <img
-                    key={movie.id}
-                    src={movie.thumbnail || placeholderImageUrl}
-                    alt="movie poster"
-                    className={
-                      'transition-opacity h-full w-full' + movie.thumbnail !== null ? 'object-cover' : 'object-fill'
-                    }
-                  />
-                </div>
+        {movies.map((movie) => (
+          <div key={movie.id} className="flex flex-col p-2">
+            <div className="grid grid-cols-[150px_1fr] md:grid-cols-[200px_1fr] lg:grid-cols-[300px_1fr] items-center gap-2">
+              <div className="bg-slate-50 m-auto rounded-lg overflow-hidden">
+                <img
+                  key={movie.id}
+                  src={movie.thumbnail || placeholderImageUrl}
+                  alt="movie poster"
+                  className={
+                    'transition-opacity h-full w-full' + movie.thumbnail !== null ? 'object-cover' : 'object-fill'
+                  }
+                />
+              </div>
 
-                <div className="flex flex-col">
-                  <h2 className="text-xl font-bold">{movie.title}</h2>
+              <div className="flex flex-col">
+                <h2 className="text-xl font-bold">{movie.title}</h2>
 
-                  {movie.MovieGenres.length > 0 && (
-                    <div className="flex flex-row gap-2">
-                      {movie.MovieGenres.map((genre) => (
+                {movie.genres.length > 0 && (
+                  <div className="flex flex-row gap-2">
+                    {movie.genres.map((genre) => (
+                      // TODO: Make into links later?
+                      <Chip className="text-sm italic" key={movie.id + genre.id}>
+                        {genre.name}
+                      </Chip>
+                    ))}
+                  </div>
+                )}
+
+                <p className="flex-grow">{movie.extract}</p>
+
+                {movie.cast.length > 0 && (
+                  <div className="flex flex-col">
+                    <h3 className="text-lg font-semibold">Starring:</h3>
+
+                    <div className="flex flex-row gap-2 flex-wrap">
+                      {movie.cast.map((cast) => (
                         // TODO: Make into links later?
-                        <Chip className="text-sm italic" key={genre.movieId + genre.genreId}>
-                          {genre.Genres.name}
-                        </Chip>
+                        <Chip key={movie.id + cast.id}>{cast.name}</Chip>
                       ))}
                     </div>
-                  )}
-
-                  <p className="flex-grow">{movie.extract}</p>
-
-                  {movie.MovieCast.length > 0 && (
-                    <div className="flex flex-col">
-                      <h3 className="text-lg font-semibold">Starring:</h3>
-
-                      <div className="flex flex-row gap-2">
-                        {movie.MovieCast.map((cast) => (
-                          // TODO: Make into links later?
-                          <Chip key={cast.movieId + cast.castId}>{cast.CastMembers.name}</Chip>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
-          ))
-        )}
+          </div>
+        ))}
       </div>
-    </>
+    </div>
   );
+}
+function getMovieParams(searchParams: URLSearchParams) {
+  const currentParams = Array.from(searchParams.entries()).reduce((prev, [k, v]) => {
+    return { ...prev, [k]: v };
+  }, {});
+  const maybePage = 'page' in currentParams && typeof currentParams.page === 'string' ? currentParams.page : '1';
+  const maybePageNumber = parseInt(maybePage);
+  const currentPage = !isNaN(maybePageNumber) && maybePageNumber > 0 ? maybePageNumber : 0;
+  return { currentParams, currentPage };
 }
