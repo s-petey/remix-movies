@@ -1,5 +1,5 @@
-import { type MetaFunction } from '@remix-run/node';
-import { ClientLoaderFunctionArgs, Form, json, useLoaderData } from '@remix-run/react';
+import { redirect, type MetaFunction } from '@remix-run/node';
+import { ClientActionFunctionArgs, ClientLoaderFunctionArgs, Form, json, useLoaderData } from '@remix-run/react';
 import { MovieCard } from './MovieCard';
 import { IndexLoader, MoviesData, loader } from './loader.server';
 
@@ -24,9 +24,13 @@ export const clientLoader = async ({ serverLoader }: ClientLoaderFunctionArgs) =
 
 clientLoader.hydrate = true;
 
-export const clientAction = async () => {
+export const action = () => {
+  return redirect('/');
+};
+
+export const clientAction = async ({ serverAction }: ClientActionFunctionArgs) => {
   moviesCache = null;
-  return null;
+  return await serverAction();
 };
 
 export default function Index() {
@@ -34,7 +38,7 @@ export default function Index() {
 
   return (
     <div>
-      <Form method="post" className="flex justify-center my-4">
+      <Form method="post" action="?index" className="flex justify-center my-4">
         <button className="p-2 bg-teal-200 text-slate-600 rounded" type="submit">
           Randomize!
         </button>
