@@ -1,5 +1,5 @@
 import { CastMembers, Genres, Movies } from '@prisma/client';
-import { LoaderFunctionArgs } from '@remix-run/node';
+import { LoaderFunctionArgs, redirect } from '@remix-run/node';
 import { json, useLoaderData, useSearchParams } from '@remix-run/react';
 import { useDeferredValue, useEffect, useState } from 'react';
 import { db } from '~/db.server';
@@ -61,6 +61,8 @@ async function getNewestMovies(page: number): Promise<LoaderHelpersData> {
   };
 }
 
+let prevSearch = '';
+
 async function getMoviesSearched(q: string, page: number): Promise<LoaderHelpersData> {
   const skipPage = page === 0 ? 0 : page - 1;
 
@@ -116,15 +118,23 @@ async function getMoviesSearched(q: string, page: number): Promise<LoaderHelpers
 }
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const searchParams = new URL(request.url).searchParams;
+  const url = new URL(request.url);
+  const searchParams = url.searchParams;
   const q = searchParams.get('q');
-  const maybePage = parseInt(searchParams.get('page') ?? 'NAN');
+  const maybePage = parseInt(searchParams.get('page') ?? 'NaN');
   const page = !isNaN(maybePage) ? maybePage : 0;
 
   if (q === null) {
     const { movies, pages } = await getNewestMovies(page);
 
     return json({ movies, pages });
+  }
+
+  if (q !== prevSearch) {
+    prevSearch = q;
+    searchParams.set('page', '1');
+
+    throw redirect(url.toString());
   }
 
   if (q.length === 0) {
@@ -163,6 +173,8 @@ export default function SearchMovies() {
 
   const { currentParams, currentPage } = getMovieParams(searchParams);
 
+  const disableBack = currentPage === 1;
+
   return (
     <div className="flex flex-col m-4">
       <div className="flex flex-grow gap-1">
@@ -176,7 +188,7 @@ export default function SearchMovies() {
         />
 
         <button
-          disabled={pages > currentPage}
+          disabled={disableBack}
           onClick={() => {
             return setSearchParams({
               ...currentParams,
@@ -185,7 +197,7 @@ export default function SearchMovies() {
           }}
           className={
             'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' +
-            (pages > currentPage
+            (disableBack
               ? ' disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:shadow-none disabled:cursor-not-allowed'
               : '')
           }
@@ -194,13 +206,13 @@ export default function SearchMovies() {
         </button>
 
         <button
-          disabled={pages > currentPage}
+          disabled={disableBack}
           onClick={() => {
             setSearchParams({ ...currentParams, page: (currentPage > 0 ? currentPage - 1 : 0).toString() });
           }}
           className={
             'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' +
-            (pages > currentPage
+            (disableBack
               ? ' disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:shadow-none disabled:cursor-not-allowed'
               : '')
           }
@@ -237,8 +249,6 @@ export default function SearchMovies() {
         >
           {'->>'}
         </button>
-
-        {/* TODO: Last page? */}
       </div>
 
       <div className="flex flex-col gap-1">
