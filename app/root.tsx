@@ -1,10 +1,11 @@
 import { LinksFunction } from '@remix-run/node';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react';
+import { ReactNode } from 'react';
 import stylesheet from '~/tailwind.css?url';
 
 export const links: LinksFunction = () => [{ rel: 'stylesheet', href: stylesheet }];
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -14,6 +15,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
+        <h1 className="text-3xl font-bold underline text-center">Movies app!</h1>
+
         {children}
         <ScrollRestoration />
         <Scripts />

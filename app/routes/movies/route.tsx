@@ -1,8 +1,12 @@
 import { json } from '@remix-run/node';
-import { useLoaderData } from '@remix-run/react';
+import { MetaFunction, useLoaderData } from '@remix-run/react';
 import { db } from '~/db.server';
 import { placeholderImageUrl } from '../_placeholderImage';
 import { Chip } from '../Chip';
+
+export const meta: MetaFunction = () => {
+  return [{ title: 'Movies List' }];
+};
 
 export const loader = async () => {
   // TODO:

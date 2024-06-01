@@ -51,14 +51,10 @@ export default function Index() {
   const { movies } = useLoaderData<typeof loader>();
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold underline text-center">Movies app!</h1>
-
-      <div className="flex flex-wrap gap-2 p-4 justify-evenly">
-        {movies.map((movie) => (
-          <MovieCard key={movie.id} movie={movie} />
-        ))}
-      </div>
+    <div className="flex flex-wrap gap-2 p-4 justify-evenly">
+      {movies.map((movie) => (
+        <MovieCard key={movie.id} movie={movie} />
+      ))}
     </div>
   );
 }
