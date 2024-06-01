@@ -42,9 +42,6 @@ export default function Index() {
         <button className="p-2 bg-teal-200 text-slate-600 rounded" type="submit">
           Randomize!
         </button>
-        <Link className="p-2 bg-teal-200 text-slate-600 rounded" to="/movies/search">
-          Search
-        </Link>
       </Form>
 
       <div className="flex flex-wrap gap-2 p-4 justify-evenly">
