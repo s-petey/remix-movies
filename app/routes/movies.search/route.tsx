@@ -1,6 +1,6 @@
 import { CastMembers, Genres, Movies } from '@prisma/client';
 import { LoaderFunctionArgs, redirect } from '@remix-run/node';
-import { MetaFunction, json, useLoaderData, useSearchParams } from '@remix-run/react';
+import { Link, MetaFunction, json, useLoaderData, useSearchParams } from '@remix-run/react';
 import { useDeferredValue, useEffect, useState } from 'react';
 import { db } from '~/db.server';
 import { Chip } from '~/routes/Chip';
@@ -183,7 +183,11 @@ export default function SearchMovies() {
 
   return (
     <div className="flex flex-col m-4">
-      <div className="flex flex-grow gap-1">
+      <div className="flex justify-evenly">
+        <h1 className="text-3xl font-bold underline text-center">
+          <Link to="/">Movies app!</Link>
+        </h1>
+
         <input
           className="rounded"
           placeholder="search"
@@ -193,68 +197,70 @@ export default function SearchMovies() {
           onChange={(event) => setValue(event.currentTarget.value)}
         />
 
-        <button
-          disabled={disableBack}
-          onClick={() => {
-            return setSearchParams({
-              ...currentParams,
-              page: '1',
-            });
-          }}
-          className={
-            'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' +
-            (disableBack
-              ? ' disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:shadow-none disabled:cursor-not-allowed'
-              : '')
-          }
-        >
-          {'<<-'}
-        </button>
+        <div className="flex gap-1">
+          <button
+            disabled={disableBack}
+            onClick={() => {
+              return setSearchParams({
+                ...currentParams,
+                page: '1',
+              });
+            }}
+            className={
+              'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' +
+              (disableBack
+                ? ' disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:shadow-none disabled:cursor-not-allowed'
+                : '')
+            }
+          >
+            {'<<-'}
+          </button>
 
-        <button
-          disabled={disableBack}
-          onClick={() => {
-            setSearchParams({ ...currentParams, page: (currentPage > 0 ? currentPage - 1 : 0).toString() });
-          }}
-          className={
-            'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' +
-            (disableBack
-              ? ' disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:shadow-none disabled:cursor-not-allowed'
-              : '')
-          }
-        >
-          {'<-'}
-        </button>
+          <button
+            disabled={disableBack}
+            onClick={() => {
+              setSearchParams({ ...currentParams, page: (currentPage > 0 ? currentPage - 1 : 0).toString() });
+            }}
+            className={
+              'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' +
+              (disableBack
+                ? ' disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:shadow-none disabled:cursor-not-allowed'
+                : '')
+            }
+          >
+            {'<-'}
+          </button>
 
-        <button
-          disabled={movies.length < 10}
-          onClick={() => {
-            setSearchParams({ ...currentParams, page: (currentPage + 1).toString() });
-          }}
-          className={
-            'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' +
-            (movies.length < 10
-              ? ' disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:shadow-none disabled:cursor-not-allowed'
-              : '')
-          }
-        >
-          {'->'}
-        </button>
+          <button
+            disabled={movies.length < 10}
+            onClick={() => {
+              setSearchParams({ ...currentParams, page: (currentPage + 1).toString() });
+            }}
+            className={
+              'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' +
+              (movies.length < 10
+                ? ' disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:shadow-none disabled:cursor-not-allowed'
+                : '')
+            }
+          >
+            {'->'}
+          </button>
 
-        <button
-          disabled={movies.length < 10}
-          onClick={() => {
-            setSearchParams({ ...currentParams, page: pages.toString() });
-          }}
-          className={
-            'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' +
-            (movies.length < 10
-              ? ' disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:shadow-none disabled:cursor-not-allowed'
-              : '')
-          }
-        >
-          {'->>'}
-        </button>
+          <button
+            disabled={movies.length < 10}
+            onClick={() => {
+              setSearchParams({ ...currentParams, page: pages.toString() });
+            }}
+            className={
+              'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' +
+              (movies.length < 10
+                ? ' disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:shadow-none disabled:cursor-not-allowed'
+                : '')
+            }
+          >
+            {'->>'}
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-1">

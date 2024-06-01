@@ -15,8 +15,6 @@ export function Layout({ children }: { children: ReactNode }) {
         <Links />
       </head>
       <body>
-        <h1 className="text-3xl font-bold underline text-center">Movies app!</h1>
-
         {children}
         <ScrollRestoration />
         <Scripts />
