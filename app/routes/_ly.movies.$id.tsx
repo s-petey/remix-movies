@@ -2,7 +2,7 @@ import { LoaderFunctionArgs } from '@remix-run/node';
 import { MetaFunction, json, useLoaderData } from '@remix-run/react';
 import { db } from '~/db.server';
 import { isValidUrl } from '~/utils/isValidUrl';
-import { placeholderImageUrl } from '../_placeholderImage';
+import { placeholderImageUrl } from './_placeholderImage';
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return [{ title: data?.movie.title ?? 'Movie' }];
