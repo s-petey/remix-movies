@@ -1,7 +1,7 @@
 import { MetaFunction, json, useLoaderData } from '@remix-run/react';
 import { db } from '~/db.server';
-import { Chip } from './Chip';
-import { placeholderImageUrl } from './_placeholderImage';
+import { Chip } from '~/utils/components/Chip';
+import { placeholderImageUrl } from '~/utils/components/placeholderImage';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Movies List' }];

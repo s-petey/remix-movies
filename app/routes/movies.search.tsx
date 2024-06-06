@@ -3,8 +3,8 @@ import { LoaderFunctionArgs, redirect } from '@remix-run/node';
 import { Link, MetaFunction, json, useLoaderData, useSearchParams } from '@remix-run/react';
 import { useDeferredValue, useEffect, useState } from 'react';
 import { db } from '~/db.server';
-import { Chip } from '~/routes/Chip';
-import { placeholderImageUrl } from '~/routes/_placeholderImage';
+import { Chip } from '~/utils/components/Chip';
+import { placeholderImageUrl } from '~/utils/components/placeholderImage';
 
 export const meta: MetaFunction<typeof loader> = ({ location }) => {
   const search = new URLSearchParams(location.search);

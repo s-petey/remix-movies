@@ -21,4 +21,3 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     return new Response('ERROR', { status: 500 });
   }
 };
-

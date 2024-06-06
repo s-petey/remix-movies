@@ -1,10 +1,15 @@
 import { redirect, type MetaFunction } from '@remix-run/node';
-import { ClientActionFunctionArgs, ClientLoaderFunctionArgs, Form, Link, json, useLoaderData } from '@remix-run/react';
-import { MovieCard } from './MovieCard';
-import { IndexLoader, MoviesData, loader } from './loader.server';
+import { ClientActionFunctionArgs, ClientLoaderFunctionArgs, Form, json, useLoaderData } from '@remix-run/react';
+import { MovieCard } from '~/utils/components/MovieCard';
+import { MoviesData, getRandomMovies } from '~/utils/randomMovies';
 
-export { loader };
+export const loader = async () => {
+  const movies = await getRandomMovies();
 
+  return json({ movies });
+};
+
+export type IndexLoader = { movies: MoviesData };
 export const meta: MetaFunction = () => {
   return [{ title: 'Movie App' }, { name: 'description', content: 'Showing off the power of remix with a movie app!' }];
 };

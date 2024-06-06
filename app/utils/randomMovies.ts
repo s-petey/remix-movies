@@ -1,4 +1,3 @@
-import { json } from '@remix-run/react';
 import { db } from '~/db.server';
 
 export async function getRandomMovies() {
@@ -42,11 +41,4 @@ export async function getRandomMovies() {
   return movies;
 }
 
-export const loader = async () => {
-  const movies = await getRandomMovies();
-
-  return json({ movies });
-};
-
 export type MoviesData = Awaited<ReturnType<typeof getRandomMovies>>;
-export type IndexLoader = { movies: MoviesData };

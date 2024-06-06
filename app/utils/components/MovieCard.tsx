@@ -1,6 +1,6 @@
 import { Link } from '@remix-run/react';
-import { placeholderImageUrl } from './_placeholderImage';
-import { MoviesData } from './loader.server';
+import { placeholderImageUrl } from './placeholderImage';
+import { MoviesData } from '../randomMovies';
 
 export function MovieCard({ movie }: { movie: MoviesData[number] }) {
   return (
