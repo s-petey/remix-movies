@@ -1,5 +1,5 @@
 import { LoaderFunctionArgs } from '@remix-run/node';
-import { MetaFunction, json, useLoaderData } from '@remix-run/react';
+import { MetaFunction, json, useLoaderData, useParams } from '@remix-run/react';
 import { db } from '~/db.server';
 import { isValidUrl } from '~/utils/isValidUrl';
 import { placeholderImageUrl } from '../_placeholderImage';
@@ -44,6 +44,9 @@ export const loader = async ({ params: { id } }: LoaderFunctionArgs) => {
 
 export default function Movie() {
   const { movie } = useLoaderData<typeof loader>();
+  const { id } = useParams();
+
+  console.log('id: ', id);
 
   const validUrl = isValidUrl(movie.href);
 
